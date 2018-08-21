@@ -4,7 +4,7 @@ var io = require('socket.io')(server);
 var axios = require('axios');
 var Pusher = require('pusher');
 var date = require('date-and-time');
-const url = 'http://logistics-api.eu-4.evennode.com/graphql';
+const url = 'http://localhost:3000/graphql';
 var reserves;
 
 var pusher = new Pusher({
@@ -26,7 +26,7 @@ setInterval(function() {
         for (let i = 0; i < reserves.length; i++) {
             var date1 = new Date();
             var date2 = new Date(reserves[i].time);
-            if(date.subtract(date2,date1).toMinutes() <= 30 )
+            if(date.subtract(date2,date1).toMinutes() <= 30 && date.subtract(date2,date1).toMinutes() > 0)
             {
                 if(date.subtract(date2,date1).toMinutes() <= 15 ) {
                     if(date.subtract(date2,date1).toMinutes() <= 5 ) {
@@ -63,6 +63,6 @@ io.on('connection', function(socket){
 
 });
 
-server.listen(3000, function () {
-    console.log('Example app listening on port 3000!');
+server.listen(8443, function () {
+    console.log('Example app listening on port 8443!');
 });
