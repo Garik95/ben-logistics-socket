@@ -4,7 +4,7 @@ var io = require('socket.io')(server);
 var axios = require('axios');
 var Pusher = require('pusher');
 var date = require('date-and-time');
-const url = 'http://localhost:3000/graphql';
+const url = 'http://ben-logistics-api.eu-4.evennode.com/graphql';
 var reserves;
 
 var pusher = new Pusher({
