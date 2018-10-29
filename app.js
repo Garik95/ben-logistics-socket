@@ -63,6 +63,6 @@ io.on('connection', function(socket){
 
 });
 
-server.listen(8443, function () {
-    console.log('Example app listening on port 8443!');
+server.listen(3000, function () {
+    console.log('Example app listening on port 3000!');
 });
