@@ -18,36 +18,6 @@ var pusher = new Pusher({
 // pusher.trigger('qwerty', 'Reserve', {
 //   "message": "hello world"
 // });
-setInterval(function() {
-    axios.post(url,{
-        query: `{ activeReserves { trailerid reserved lat long time truckid user status} }`
-    }).then(response => {
-        reserves = response.data.data.activeReserves;
-        for (let i = 0; i < reserves.length; i++) {
-            var date1 = new Date();
-            var date2 = new Date(reserves[i].time);
-            if(date.subtract(date2,date1).toMinutes() <= 30 && date.subtract(date2,date1).toMinutes() > 0)
-            {
-                if(date.subtract(date2,date1).toMinutes() <= 15 ) {
-                    if(date.subtract(date2,date1).toMinutes() <= 5 ) {
-                        pusher.trigger(reserves[i].user, 'Reserve', {
-                            "message": "Reserve for trailer #"+reserves[i].trailerid+" expires in "+ date.subtract(date2,date1).toMinutes()
-                        });
-                    } else {
-                        pusher.trigger(reserves[i].user, 'Reserve', {
-                            "message": "Reserve for trailer #"+reserves[i].trailerid+" expires in "+ date.subtract(date2,date1).toMinutes()
-                        });    
-                    }
-                } else {
-                    pusher.trigger(reserves[i].user, 'Reserve', {
-                    "message": "Reserve for trailer #"+reserves[i].trailerid+" expires in "+ date.subtract(date2,date1).toMinutes()
-                    });
-                }
-            }
-        }
-    }).catch(e => {console.log(e)})
-}, 5 * 60 * 1000);
-
 
 io.on('connection', function(socket){ 
     // console.log(socket) 
@@ -55,6 +25,31 @@ io.on('connection', function(socket){
             //Sending an object when emmiting an event
             socket.emit('ping', { data: 'pinging!'});
         }, 2000);
+
+        setInterval(function() {
+            axios.post(url,{
+                query: `{ activeReserves { trailerid reserved lat long time truckid user status} }`
+            }).then(response => {
+                reserves = response.data.data.activeReserves;
+                for (let i = 0; i < reserves.length; i++) {
+                    var date1 = new Date();
+                    var date2 = new Date(reserves[i].time);
+                    if(date.subtract(date2,date1).toMinutes() <= 30 && date.subtract(date2,date1).toMinutes() > 0)
+                    {
+                        socket.emit(reserves[i].user, { message: "Reserve for trailer #"+reserves[i].trailerid+" expires in "+ date.subtract(date2,date1).toMinutes()})                                
+                    } else
+                    if(date.subtract(date2,date1).toMinutes() <= 0) {
+                        axios.post(url,{
+                            query: `mutation{ freezeReserve(trailerid:`+ reserves[i].trailerid +`, user:"` + reserves[i].user + `") { trailerid user} }`
+                        }).then(response => {
+                            console.log("TRailer with ID " + reserves[i].trailerid + " has been freezed!")
+                        }).catch(e => {
+                            console.log(e)
+                        })
+                    }
+                }
+            }).catch(e => {console.log(e)})
+        }, 5 * 60 * 1000);
 
         socket.on('reserve', function (data) {
             console.log(JSON.stringify(data))
