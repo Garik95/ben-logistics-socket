@@ -31,23 +31,27 @@ io.on('connection', function(socket){
                 query: `{ activeReserves { trailerid reserved lat long time truckid user status} }`
             }).then(response => {
                 reserves = response.data.data.activeReserves;
-                for (let i = 0; i < reserves.length; i++) {
-                    var date1 = new Date();
-                    var date2 = new Date(reserves[i].time);
-                    if(date.subtract(date2,date1).toMinutes() <= 30 && date.subtract(date2,date1).toMinutes() > 0)
-                    {
-                        socket.emit(reserves[i].user, { message: "Reserve for trailer #"+reserves[i].trailerid+" expires in "+ date.subtract(date2,date1).toMinutes()})                                
-                    } else
-                    if(date.subtract(date2,date1).toMinutes() <= 0) {
-                        axios.post(url,{
-                            query: `mutation{ freezeReserve(trailerid:`+ reserves[i].trailerid +`, user:"` + reserves[i].user + `") { trailerid user} }`
-                        }).then(response => {
-                            console.log("TRailer with ID " + reserves[i].trailerid + " has been freezed!")
-                        }).catch(e => {
-                            console.log(e)
-                        })
-                    }
-                }
+                axios.post(url,{
+                  query: `{ currentTime { Curr }}`
+                }).then(res => {
+                  var date1 = new Date(res.data.data.currentTime.Curr);
+                  for (let i = 0; i < reserves.length; i++) {   
+                      var date2 = new Date(reserves[i].time);
+                      if(date.subtract(date2,date1).toMinutes() <= 30 && date.subtract(date2,date1).toMinutes() > 0)
+                      {
+                          socket.emit(reserves[i].user, { message: "Reserve for trailer #"+reserves[i].trailerid+" expires in "+ date.subtract(date2,date1).toMinutes()})                                
+                      } else
+                      if(date.subtract(date2,date1).toMinutes() <= 0) {
+                          axios.post(url,{
+                              query: `mutation{ freezeReserve(trailerid:`+ reserves[i].trailerid +`, user:"` + reserves[i].user + `") { trailerid user} }`
+                          }).then(response => {
+                              console.log("TRailer with ID " + reserves[i].trailerid + " has been freezed!")
+                          }).catch(e => {
+                              console.log(e)
+                          })
+                      }
+                  }
+                })
             }).catch(e => {console.log(e)})
         }, 5 * 60 * 1000);
 
